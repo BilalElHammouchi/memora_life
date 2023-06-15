@@ -40,6 +40,8 @@ dependencies:
   cloud_firestore: ^4.8.1
   elegant_notification: ^1.10.0
   syncfusion_flutter_calendar: ^21.2.10
+  calendar_date_picker2: ^0.5.2
+  day_night_time_picker: ^1.2.0+2
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +72,8 @@ flutter:
       - assets/en.png
       - assets/facebook.png
       - assets/google.png
+      - assets/moon.png
+      - assets/sun.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

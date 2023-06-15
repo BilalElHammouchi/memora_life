@@ -1,3 +1,6 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:day_night_time_picker/day_night_time_picker.dart';
+import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:memora_life/firebase_wrapper.dart';
 import 'package:memora_life/login_view.dart';
@@ -13,7 +16,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final CalendarController _controller = CalendarController();
   late String selectedValue;
+  double containerHeight = 0;
   bool _showAgenda = true;
+  Time eventStartTime = Time(hour: 09, minute: 00);
+  Time eventEndTime = Time(hour: 12, minute: 00);
+
+  List<DateTime?> datePicker = [];
 
   @override
   void initState() {
@@ -44,17 +52,22 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
+        resizeToAvoidBottomInset: false,
+        body: Row(children: [
           Expanded(
             flex: 3,
             child: Container(
               child: Padding(
                 padding: const EdgeInsets.all(25.0),
                 child: SfCalendar(
+                  showNavigationArrow: true,
                   view: CalendarView.month,
                   controller: _controller,
-                  monthViewSettings: MonthViewSettings(showAgenda: _showAgenda),
+                  dataSource: MeetingDataSource(_getDataSource()),
+                  monthViewSettings: MonthViewSettings(
+                      showAgenda: _showAgenda,
+                      appointmentDisplayMode:
+                          MonthAppointmentDisplayMode.appointment),
                 ),
               ),
             ),
@@ -104,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("show Agenda"),
+                          const Text("show Agenda"),
                           Checkbox(
                             value: _showAgenda,
                             onChanged: (value) {
@@ -115,6 +128,370 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
+                    Flexible(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 500),
+                        height: containerHeight,
+                        child: containerHeight > 0
+                            ? FutureBuilder(
+                                future: Future.delayed(
+                                    const Duration(milliseconds: 200)),
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<dynamic> snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                    return Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        Flexible(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: TextField(
+                                              decoration: InputDecoration(
+                                                hintText: 'Event Name',
+                                                hintStyle: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                                border:
+                                                    const OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.blue),
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.grey[200],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 5,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: CalendarDatePicker2(
+                                              config:
+                                                  CalendarDatePicker2Config(),
+                                              value: datePicker,
+                                              onValueChanged: (dates) =>
+                                                  datePicker = dates,
+                                            ),
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: SizedBox(
+                                            width: 250,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.of(context).push(
+                                                  showPicker(
+                                                    onChangeDateTime: (p0) {
+                                                      if (p0.hour >
+                                                              eventEndTime
+                                                                  .hour ||
+                                                          (p0.hour ==
+                                                                  eventEndTime
+                                                                      .hour &&
+                                                              p0.minute >
+                                                                  eventEndTime
+                                                                      .minute)) {
+                                                        ElegantNotification
+                                                            .error(
+                                                                width: 100,
+                                                                title:
+                                                                    const Text(
+                                                                  "Event Inconsistency",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .black,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                ),
+                                                                description:
+                                                                    const Text(
+                                                                  "Event start should be before the end of the event",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .black),
+                                                                )).show(
+                                                            context);
+                                                      }
+                                                    },
+                                                    is24HrFormat: true,
+                                                    sunAsset: const Image(
+                                                        image: AssetImage(
+                                                            "assets/sun.png")),
+                                                    moonAsset: const Image(
+                                                        image: AssetImage(
+                                                            "assets/moon.png")),
+                                                    context: context,
+                                                    value: eventStartTime,
+                                                    onChange: (Time newTime) {
+                                                      setState(() {
+                                                        eventStartTime =
+                                                            newTime;
+                                                      });
+                                                    },
+                                                  ),
+                                                );
+                                              },
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  const Padding(
+                                                    padding:
+                                                        EdgeInsets.all(8.0),
+                                                    child: Text(
+                                                      "Event Start Time",
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                          color: Colors.red,
+                                                          width: 2.0,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Container(
+                                                            decoration:
+                                                                const BoxDecoration(
+                                                              border: Border(
+                                                                right:
+                                                                    BorderSide(
+                                                                  color: Colors
+                                                                      .red,
+                                                                  width: 2.0,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        4.0),
+                                                            child: Text(
+                                                              eventStartTime
+                                                                  .hour
+                                                                  .toString()
+                                                                  .padLeft(
+                                                                      2, '0'),
+                                                              style: const TextStyle(
+                                                                  color: Colors
+                                                                      .red),
+                                                            ),
+                                                          ),
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        4.0),
+                                                            child: Text(
+                                                              eventStartTime
+                                                                  .minute
+                                                                  .toString()
+                                                                  .padLeft(
+                                                                      2, '0'),
+                                                              style: const TextStyle(
+                                                                  color: Colors
+                                                                      .red),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: SizedBox(
+                                            width: 250,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.of(context).push(
+                                                  showPicker(
+                                                    onChangeDateTime: (p0) {
+                                                      if (p0.hour <
+                                                              eventStartTime
+                                                                  .hour ||
+                                                          (p0.hour ==
+                                                                  eventStartTime
+                                                                      .hour &&
+                                                              p0.minute <
+                                                                  eventStartTime
+                                                                      .minute)) {
+                                                        ElegantNotification
+                                                            .error(
+                                                                width: 100,
+                                                                title:
+                                                                    const Text(
+                                                                  "Event Inconsistency",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .black,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                ),
+                                                                description:
+                                                                    const Text(
+                                                                  "Event end should be after the start of the event",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .black),
+                                                                )).show(
+                                                            context);
+                                                      }
+                                                    },
+                                                    is24HrFormat: true,
+                                                    sunAsset: const Image(
+                                                        image: AssetImage(
+                                                            "assets/sun.png")),
+                                                    moonAsset: const Image(
+                                                        image: AssetImage(
+                                                            "assets/moon.png")),
+                                                    context: context,
+                                                    value: eventEndTime,
+                                                    onChange: (Time newTime) {
+                                                      setState(() {
+                                                        eventEndTime = newTime;
+                                                      });
+                                                    },
+                                                  ),
+                                                );
+                                              },
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  const Padding(
+                                                    padding:
+                                                        EdgeInsets.all(8.0),
+                                                    child: Text(
+                                                      "Event End Time",
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                          color: Colors.red,
+                                                          width: 2.0,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Container(
+                                                            decoration:
+                                                                const BoxDecoration(
+                                                              border: Border(
+                                                                right:
+                                                                    BorderSide(
+                                                                  color: Colors
+                                                                      .red,
+                                                                  width: 2.0,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        4.0),
+                                                            child: Text(
+                                                              eventEndTime.hour
+                                                                  .toString()
+                                                                  .padLeft(
+                                                                      2, '0'),
+                                                              style: const TextStyle(
+                                                                  color: Colors
+                                                                      .red),
+                                                            ),
+                                                          ),
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        4.0),
+                                                            child: Text(
+                                                              eventEndTime
+                                                                  .minute
+                                                                  .toString()
+                                                                  .padLeft(
+                                                                      2, '0'),
+                                                              style: const TextStyle(
+                                                                  color: Colors
+                                                                      .red),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  } else {
+                                    return const SizedBox(); // Display an empty container while waiting
+                                  }
+                                },
+                              )
+                            : const SizedBox(),
+                      ),
+                    ),
+                    FloatingActionButton(
+                      onPressed: () {},
+                      child: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              containerHeight == 0
+                                  ? containerHeight = 500
+                                  : containerHeight = 0;
+                            });
+                          },
+                          icon: const Icon(Icons.add)),
+                    ),
                     ElevatedButton.icon(
                       onPressed: () {
                         FirebaseWrapper.signOut();
@@ -134,9 +511,59 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-              ))
-        ],
-      ),
-    );
+              )),
+        ]));
   }
+
+  List<Meeting> _getDataSource() {
+    final List<Meeting> meetings = <Meeting>[];
+    final DateTime today = DateTime.now();
+    final DateTime startTime =
+        DateTime(today.year, today.month, today.day, 9, 0, 0);
+    final DateTime endTime = startTime.add(const Duration(hours: 2));
+    meetings.add(Meeting(
+        'Conference', startTime, endTime, const Color(0xFF0F8644), false));
+    return meetings;
+  }
+}
+
+class MeetingDataSource extends CalendarDataSource {
+  MeetingDataSource(List<Meeting> source) {
+    appointments = source;
+  }
+
+  @override
+  DateTime getStartTime(int index) {
+    return appointments![index].from;
+  }
+
+  @override
+  DateTime getEndTime(int index) {
+    return appointments![index].to;
+  }
+
+  @override
+  String getSubject(int index) {
+    return appointments![index].eventName;
+  }
+
+  @override
+  Color getColor(int index) {
+    return appointments![index].background;
+  }
+
+  @override
+  bool isAllDay(int index) {
+    return appointments![index].isAllDay;
+  }
+}
+
+class Meeting {
+  Meeting(this.eventName, this.from, this.to, this.background, this.isAllDay);
+
+  String eventName;
+  DateTime from;
+  DateTime to;
+  Color background;
+  bool isAllDay;
 }
