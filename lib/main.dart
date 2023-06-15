@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:memora_life/firebaseWrapper.dart';
-import 'package:memora_life/homeView.dart';
-import 'package:memora_life/loginView.dart';
+import 'package:memora_life/firebase_wrapper.dart';
+import 'package:memora_life/home_view.dart';
+import 'package:memora_life/login_view.dart';
 
 void main() {
   runApp(const MyApp());

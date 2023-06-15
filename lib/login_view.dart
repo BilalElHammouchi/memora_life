@@ -1,8 +1,8 @@
 import 'package:animated_login/animated_login.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
-import 'package:memora_life/firebaseWrapper.dart';
-import 'package:memora_life/homeView.dart';
+import 'package:memora_life/firebase_wrapper.dart';
+import 'package:memora_life/home_view.dart';
 
 class LoginScreen extends StatefulWidget {
   /// Simulates the multilanguage, you will implement your own logic.
