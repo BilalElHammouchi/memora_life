@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:elegant_notification/elegant_notification.dart';
@@ -21,9 +23,13 @@ class _HomePageState extends State<HomePage> {
   bool _showAgenda = true;
   Time eventStartTime = Time(hour: 09, minute: 00);
   Time eventEndTime = Time(hour: 12, minute: 00);
-  final List<Meeting> _events = <Meeting>[]; // Events List
-  Color pickerColor = const Color(0xff443a49);
+  late DateTime eventStartDate;
+  late DateTime eventEndDate;
+  MeetingDataSource _meetingDataSource =
+      MeetingDataSource(<Appointment>[]); // Events List
+  Color pickerColor = Colors.red;
   Color eventColor = Colors.red;
+  TextEditingController eventName = TextEditingController();
 
   List<DateTime?> datePicker = [];
 
@@ -69,7 +75,7 @@ class _HomePageState extends State<HomePage> {
                   showNavigationArrow: true,
                   view: CalendarView.month,
                   controller: _controller,
-                  dataSource: MeetingDataSource(_events),
+                  dataSource: _meetingDataSource,
                   monthViewSettings: MonthViewSettings(
                       showAgenda: _showAgenda,
                       appointmentDisplayMode:
@@ -159,6 +165,7 @@ class _HomePageState extends State<HomePage> {
                                               children: [
                                                 Flexible(
                                                   child: TextField(
+                                                    controller: eventName,
                                                     decoration: InputDecoration(
                                                       hintText: 'Event Name',
                                                       hintStyle:
@@ -193,12 +200,20 @@ class _HomePageState extends State<HomePage> {
                                           flex: 5,
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: CalendarDatePicker2(
-                                              config:
-                                                  CalendarDatePicker2Config(),
-                                              value: datePicker,
-                                              onValueChanged: (dates) =>
-                                                  datePicker = dates,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                                color: Colors.white,
+                                              ),
+                                              child: CalendarDatePicker2(
+                                                config:
+                                                    CalendarDatePicker2Config(),
+                                                value: datePicker,
+                                                onValueChanged: (dates) {
+                                                  datePicker = dates;
+                                                },
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -512,9 +527,77 @@ class _HomePageState extends State<HomePage> {
                       child: IconButton(
                           onPressed: () {
                             setState(() {
-                              containerHeight == 0
-                                  ? containerHeight = 500
-                                  : containerHeight = 0;
+                              if (containerHeight == 0) {
+                                containerHeight = 500;
+                              } else {
+                                if (eventEndTime.hour < eventStartTime.hour ||
+                                    (eventEndTime.hour == eventStartTime.hour &&
+                                        eventEndTime.minute <
+                                            eventStartTime.minute)) {
+                                  ElegantNotification.error(
+                                      width: 100,
+                                      title: const Text(
+                                        "Event Inconsistency",
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      description: const Text(
+                                        "Error detected concerning the event timing",
+                                        style: TextStyle(color: Colors.black),
+                                      )).show(context);
+                                } else if (eventName.text.isEmpty) {
+                                  ElegantNotification.error(
+                                      width: 100,
+                                      title: const Text(
+                                        "Event Inconsistency",
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      description: const Text(
+                                        "Error detected concerning the event name",
+                                        style: TextStyle(color: Colors.black),
+                                      )).show(context);
+                                } else if (datePicker[0]!
+                                    .isBefore(DateTime.now())) {
+                                  ElegantNotification.error(
+                                      width: 100,
+                                      title: const Text(
+                                        "Event Inconsistency",
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      description: const Text(
+                                        "Error detected concerning the event date",
+                                        style: TextStyle(color: Colors.black),
+                                      )).show(context);
+                                } else {
+                                  containerHeight = 0;
+                                  eventStartDate = DateTime(
+                                      datePicker[0]!.year,
+                                      datePicker[0]!.month,
+                                      datePicker[0]!.day,
+                                      eventStartTime.hour,
+                                      eventStartTime.minute);
+                                  eventEndDate = DateTime(
+                                      datePicker[0]!.year,
+                                      datePicker[0]!.month,
+                                      datePicker[0]!.day,
+                                      eventEndTime.hour,
+                                      eventStartTime.hour);
+                                  final Appointment app = Appointment(
+                                      startTime: eventStartDate,
+                                      endTime: eventEndDate,
+                                      subject: eventName.text,
+                                      color: eventColor);
+                                  _meetingDataSource.appointments!.add(app);
+                                  _meetingDataSource.notifyListeners(
+                                      CalendarDataSourceAction.add,
+                                      <Appointment>[app]);
+                                }
+                              }
                             });
                           },
                           icon: containerHeight == 0
@@ -522,21 +605,24 @@ class _HomePageState extends State<HomePage> {
                               : const Icon(Icons.check)),
                     ),
                     // Logout Button
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        FirebaseWrapper.signOut();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Logout'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Colors.red, // Set the button background color
-                        foregroundColor: Colors.white, // Set the text color
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          FirebaseWrapper.signOut();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Logout'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Colors.red, // Set the button background color
+                          foregroundColor: Colors.white, // Set the text color
+                        ),
                       ),
                     ),
                   ],
@@ -603,7 +689,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class MeetingDataSource extends CalendarDataSource {
-  MeetingDataSource(List<Meeting> source) {
+  MeetingDataSource(List<Appointment> source) {
     appointments = source;
   }
 
