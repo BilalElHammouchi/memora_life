@@ -70,8 +70,7 @@ class FirebaseWrapper {
   static Future<String> signInWithEmailAndPassword(
       String email, String password) async {
     try {
-      UserCredential userCredential = await auth.signInWithEmailAndPassword(
-          email: email, password: password);
+      await auth.signInWithEmailAndPassword(email: email, password: password);
       // Set remember me to true
       await auth.setPersistence(Persistence.LOCAL);
       // User is signed in
