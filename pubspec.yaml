@@ -39,6 +39,7 @@ dependencies:
   firebase_auth: ^4.6.3
   cloud_firestore: ^4.8.1
   elegant_notification: ^1.10.0
+  syncfusion_flutter_calendar: ^21.2.10
 
 dev_dependencies:
   flutter_test:

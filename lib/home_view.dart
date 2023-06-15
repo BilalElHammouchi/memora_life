@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
-import 'package:memora_life/firebaseWrapper.dart';
-import 'package:memora_life/loginView.dart';
+import 'package:memora_life/firebase_wrapper.dart';
+import 'package:memora_life/login_view.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,7 +18,14 @@ class _HomePageState extends State<HomePage> {
         children: [
           Expanded(
             flex: 3,
-            child: Container(),
+            child: Container(
+              child: Padding(
+                padding: const EdgeInsets.all(25.0),
+                child: SfCalendar(
+                  view: CalendarView.month,
+                ),
+              ),
+            ),
           ),
           Expanded(
               flex: 1,
@@ -36,8 +42,8 @@ class _HomePageState extends State<HomePage> {
                               builder: (context) => const LoginScreen()),
                         );
                       },
-                      icon: Icon(Icons.logout),
-                      label: Text('Logout'),
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Logout'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             Colors.red, // Set the button background color
