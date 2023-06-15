@@ -42,6 +42,7 @@ dependencies:
   syncfusion_flutter_calendar: ^21.2.10
   calendar_date_picker2: ^0.5.2
   day_night_time_picker: ^1.2.0+2
+  flutter_colorpicker: ^1.0.3
 
 dev_dependencies:
   flutter_test:

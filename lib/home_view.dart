@@ -2,6 +2,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:memora_life/firebase_wrapper.dart';
 import 'package:memora_life/login_view.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -20,6 +21,9 @@ class _HomePageState extends State<HomePage> {
   bool _showAgenda = true;
   Time eventStartTime = Time(hour: 09, minute: 00);
   Time eventEndTime = Time(hour: 12, minute: 00);
+  final List<Meeting> _events = <Meeting>[]; // Events List
+  Color pickerColor = const Color(0xff443a49);
+  Color eventColor = Colors.red;
 
   List<DateTime?> datePicker = [];
 
@@ -47,7 +51,9 @@ class _HomePageState extends State<HomePage> {
     return menuItems;
   }
 
-  Color? _headerColor, _viewHeaderColor, _calendarColor;
+  void changeColor(Color color) {
+    setState(() => pickerColor = color);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +69,7 @@ class _HomePageState extends State<HomePage> {
                   showNavigationArrow: true,
                   view: CalendarView.month,
                   controller: _controller,
-                  dataSource: MeetingDataSource(_getDataSource()),
+                  dataSource: MeetingDataSource(_events),
                   monthViewSettings: MonthViewSettings(
                       showAgenda: _showAgenda,
                       appointmentDisplayMode:
@@ -147,21 +153,39 @@ class _HomePageState extends State<HomePage> {
                                         Flexible(
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: TextField(
-                                              decoration: InputDecoration(
-                                                hintText: 'Event Name',
-                                                hintStyle: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontStyle: FontStyle.italic,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceAround,
+                                              children: [
+                                                Flexible(
+                                                  child: TextField(
+                                                    decoration: InputDecoration(
+                                                      hintText: 'Event Name',
+                                                      hintStyle:
+                                                          const TextStyle(
+                                                        color: Colors.grey,
+                                                        fontStyle:
+                                                            FontStyle.italic,
+                                                      ),
+                                                      border:
+                                                          const OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                            color: Colors.blue),
+                                                      ),
+                                                      filled: true,
+                                                      fillColor:
+                                                          Colors.grey[200],
+                                                    ),
+                                                  ),
                                                 ),
-                                                border:
-                                                    const OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color: Colors.blue),
-                                                ),
-                                                filled: true,
-                                                fillColor: Colors.grey[200],
-                                              ),
+                                                Flexible(
+                                                    child: FloatingActionButton(
+                                                  onPressed: () {
+                                                    _dialogBuilder(context);
+                                                  },
+                                                  backgroundColor: eventColor,
+                                                )),
+                                              ],
                                             ),
                                           ),
                                         ),
@@ -178,6 +202,7 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           ),
                                         ),
+                                        // Event Start Time Picker
                                         Flexible(
                                           child: SizedBox(
                                             width: 250,
@@ -325,6 +350,7 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           ),
                                         ),
+                                        // Event End Time Picker
                                         Flexible(
                                           child: SizedBox(
                                             width: 250,
@@ -480,6 +506,7 @@ class _HomePageState extends State<HomePage> {
                             : const SizedBox(),
                       ),
                     ),
+                    // Add/Confirm Event
                     FloatingActionButton(
                       onPressed: () {},
                       child: IconButton(
@@ -490,8 +517,11 @@ class _HomePageState extends State<HomePage> {
                                   : containerHeight = 0;
                             });
                           },
-                          icon: const Icon(Icons.add)),
+                          icon: containerHeight == 0
+                              ? const Icon(Icons.add)
+                              : const Icon(Icons.check)),
                     ),
+                    // Logout Button
                     ElevatedButton.icon(
                       onPressed: () {
                         FirebaseWrapper.signOut();
@@ -515,8 +545,52 @@ class _HomePageState extends State<HomePage> {
         ]));
   }
 
+  Future<void> _dialogBuilder(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Pick a color!'),
+            content: SingleChildScrollView(
+              child: ColorPicker(
+                pickerColor: pickerColor,
+                onColorChanged: changeColor,
+              ),
+              // Use Material color picker:
+              //
+              // child: MaterialPicker(
+              //   pickerColor: pickerColor,
+              //   onColorChanged: changeColor,
+              //   showLabel: true, // only on portrait mode
+              // ),
+              //
+              // Use Block color picker:
+              //
+              // child: BlockPicker(
+              //   pickerColor: currentColor,
+              //   onColorChanged: changeColor,
+              // ),
+              //
+              // child: MultipleChoiceBlockPicker(
+              //   pickerColors: currentColors,
+              //   onColorsChanged: changeColors,
+              // ),
+            ),
+            actions: <Widget>[
+              ElevatedButton(
+                child: const Text('Got it'),
+                onPressed: () {
+                  setState(() => eventColor = pickerColor);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  /*
   List<Meeting> _getDataSource() {
-    final List<Meeting> meetings = <Meeting>[];
     final DateTime today = DateTime.now();
     final DateTime startTime =
         DateTime(today.year, today.month, today.day, 9, 0, 0);
@@ -525,6 +599,7 @@ class _HomePageState extends State<HomePage> {
         'Conference', startTime, endTime, const Color(0xFF0F8644), false));
     return meetings;
   }
+  */
 }
 
 class MeetingDataSource extends CalendarDataSource {
