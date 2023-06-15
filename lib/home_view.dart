@@ -13,10 +13,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final CalendarController _controller = CalendarController();
   late String selectedValue;
+  bool _showAgenda = true;
 
   @override
   void initState() {
     selectedValue = "Month";
+    _controller.view = CalendarView.month;
     super.initState();
   }
 
@@ -52,6 +54,7 @@ class _HomePageState extends State<HomePage> {
                 child: SfCalendar(
                   view: CalendarView.month,
                   controller: _controller,
+                  monthViewSettings: MonthViewSettings(showAgenda: _showAgenda),
                 ),
               ),
             ),
@@ -62,23 +65,6 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.blue,
                 child: Column(
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        FirebaseWrapper.signOut();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Logout'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Colors.red, // Set the button background color
-                        foregroundColor: Colors.white, // Set the text color
-                      ),
-                    ),
                     DropdownButton(
                       value: selectedValue,
                       items: dropdownItems,
@@ -113,6 +99,38 @@ class _HomePageState extends State<HomePage> {
                           }
                         });
                       },
+                    ),
+                    if (_controller.view == CalendarView.month)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("show Agenda"),
+                          Checkbox(
+                            value: _showAgenda,
+                            onChanged: (value) {
+                              setState(() {
+                                _showAgenda = value!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        FirebaseWrapper.signOut();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Logout'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Colors.red, // Set the button background color
+                        foregroundColor: Colors.white, // Set the text color
+                      ),
                     ),
                   ],
                 ),
