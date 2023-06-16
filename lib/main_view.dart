@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memora_life/home_view.dart';
+import 'package:memora_life/profile_view.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -28,7 +29,7 @@ class _MainPageState extends State<MainPage> {
           ),
           NavigationDestination(
             icon: Icon(Icons.location_pin),
-            label: 'Reservations',
+            label: 'Locations',
           ),
           NavigationDestination(
             icon: Icon(Icons.person),
@@ -44,11 +45,7 @@ class _MainPageState extends State<MainPage> {
           alignment: Alignment.center,
           child: const Text('Page 2'),
         ),
-        Container(
-          color: Colors.blue,
-          alignment: Alignment.center,
-          child: const Text('Page 3'),
-        ),
+        ProfilePage(),
       ][currentPageIndex],
     );
   }
