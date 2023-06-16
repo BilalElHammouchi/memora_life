@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:memora_life/firebase_wrapper.dart';
 import 'package:memora_life/home_view.dart';
 import 'package:memora_life/login_view.dart';
+import 'package:memora_life/main_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,7 +56,7 @@ class _MyAppState extends State<MyApp> {
                   }
                   if (!kIsWeb) return const HomePage();
                   if (FirebaseWrapper.auth.currentUser != null) {
-                    return const HomePage();
+                    return const MainPage();
                   } else {
                     return const Scaffold(
                       body: LoginScreen(),
