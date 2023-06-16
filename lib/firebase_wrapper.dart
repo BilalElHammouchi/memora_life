@@ -6,11 +6,38 @@ import 'firebase_options.dart';
 
 class FirebaseWrapper {
   static final FirebaseAuth auth = FirebaseAuth.instance;
+  static late String username;
   static Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    syncUsername();
+  }
+
+  static Future<void> syncUsername() async {
+    final CollectionReference usersCollection =
+        FirebaseFirestore.instance.collection('users');
+    final DocumentReference userDocument =
+        usersCollection.doc(auth.currentUser!.uid);
+    final DocumentSnapshot snapshot = await userDocument.get();
+    if (snapshot.exists) {
+      final userData = snapshot.data() as Map<String, dynamic>;
+      username = userData['username'];
+    } else {
+      print('User document does not exist');
+    }
+  }
+
+  static Future<void> updateUsername(String username) async {
+    final CollectionReference usersCollection =
+        FirebaseFirestore.instance.collection('users');
+    final DocumentReference userDocument =
+        usersCollection.doc(FirebaseWrapper.auth.currentUser!.uid);
+
+    await userDocument.update({
+      'username': username,
+    });
   }
 
   static Future<String> signUpWithUsername(
