@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:animated_login/animated_login.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
