@@ -74,8 +74,8 @@ class _HomePageState extends State<HomePage> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.location_pin),
-            label: 'Locations',
+            icon: Icon(Icons.people),
+            label: 'Connections',
           ),
           NavigationDestination(
             icon: Icon(Icons.person),

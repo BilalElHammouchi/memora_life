@@ -226,10 +226,11 @@ class FirebaseWrapper {
       // User is signed in
       return 'signed-in';
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+      if (e.code == 'user-not-found' || e.message!.contains('user-not-found')) {
+        return 'user-not-found';
+      } else if (e.code == 'wrong-password' ||
+          e.message!.contains('wrong-password')) {
+        return 'wrong-password';
       }
       return e.code;
     }
