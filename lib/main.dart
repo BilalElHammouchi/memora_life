@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:memora_life/firebase_wrapper.dart';
 import 'package:memora_life/home_view.dart';
 import 'package:memora_life/login_view.dart';
-import 'package:memora_life/main_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,6 +11,7 @@ void main() {
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
+  static int currentPageIndex = 0;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -56,7 +56,7 @@ class _MyAppState extends State<MyApp> {
                   }
                   if (!kIsWeb) return const HomePage();
                   if (FirebaseWrapper.auth.currentUser != null) {
-                    return const MainPage();
+                    return const HomePage();
                   } else {
                     return const Scaffold(
                       body: LoginScreen(),
