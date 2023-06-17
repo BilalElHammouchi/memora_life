@@ -24,6 +24,54 @@ class FirebaseWrapper {
     await syncAboutText();
   }
 
+  // Function to search for usernames
+  static Future<List<Map<String, dynamic>>> searchUsernames(
+      String searchTerm) async {
+    final QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isGreaterThanOrEqualTo: searchTerm)
+        .where('username', isLessThanOrEqualTo: searchTerm + '\uf8ff')
+        .get();
+
+    final List<Map<String, dynamic>> usernamesInfo = snapshot.docs
+        .map((doc) => (doc.data() as Map<String, dynamic>))
+        .toList();
+    List<Map<String, dynamic>> modifiedList = [];
+
+    for (var i = 0; i < usernamesInfo.length; i++) {
+      Map<String, dynamic> map = usernamesInfo[i];
+      map['profilePic'] = await getProfilePictureUrlByUsername(map['username']);
+      modifiedList.add(map);
+    }
+    return usernamesInfo;
+  }
+
+  static Future<String?> getProfilePictureUrlByUsername(String username) async {
+    try {
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final String userId = querySnapshot.docs[0].id;
+        final Reference ref = FirebaseStorage.instance.ref().child(
+            'profile_images/$userId.jpg'); // Assuming the file format is JPEG
+
+        final String downloadUrl = await ref.getDownloadURL();
+        return downloadUrl;
+      } else {
+        // User not found
+        return null;
+      }
+    } catch (e) {
+      // Handle any errors that occur during the retrieval
+      print('Error retrieving profile picture: $e');
+      return null;
+    }
+  }
+
   static Future<String> updatePassword(String newPassword) async {
     final FirebaseAuth auth = FirebaseAuth.instance;
     final User? user = auth.currentUser;
@@ -106,6 +154,7 @@ class FirebaseWrapper {
         profilePicture = Image.network(downloadURL);
       } catch (e) {
         print(e);
+        profilePicture = Image.asset('user.png');
       }
     }
   }
