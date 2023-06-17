@@ -13,13 +13,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   TextEditingController aboutTextController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   String aboutTextPlaceholder = 'Add something interesting about you';
 
   final String _password = '********';
   bool _isUsernameEditable = false;
-  bool _isPasswordEditable = false;
   int _isLoading = -1;
   bool isEditingAbout = false;
+  bool isPasswordVisible = false;
   FocusNode _textFieldFocusNode = FocusNode();
 
   @override
@@ -41,9 +42,229 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void toggleEditPassword() {
-    setState(() {
-      _isPasswordEditable = !_isPasswordEditable;
-    });
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Change Password'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: passwordController,
+                    obscureText: !isPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Current Password',
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            isPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              isPasswordVisible = !isPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                  },
+                  child: const Text('Cancel'),
+                ),
+                if (_isLoading == 4)
+                  const CircularProgressIndicator()
+                else
+                  ElevatedButton(
+                    onPressed: () async {
+                      setState(() {
+                        _isLoading = 4;
+                      });
+                      bool correctPassword =
+                          await FirebaseWrapper.checkPassword(
+                              passwordController);
+                      setState(() {
+                        _isLoading = -1;
+                      });
+                      if (correctPassword) {
+                        Navigator.pop(context); // Close the dialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            String newPassword = '';
+                            String confirmNewPassword = '';
+
+                            return StatefulBuilder(
+                                builder: (context, setState) {
+                              return AlertDialog(
+                                title: const Text('Change Password'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      onChanged: (value) {
+                                        newPassword = value;
+                                      },
+                                      obscureText: !isPasswordVisible,
+                                      decoration: InputDecoration(
+                                        labelText: 'New Password',
+                                        suffixIcon: Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
+                                          child: IconButton(
+                                            icon: Icon(
+                                              isPasswordVisible
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                isPasswordVisible =
+                                                    !isPasswordVisible;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    TextField(
+                                      onChanged: (value) {
+                                        confirmNewPassword = value;
+                                      },
+                                      obscureText: !isPasswordVisible,
+                                      decoration: InputDecoration(
+                                        labelText: 'Confirm New Password',
+                                        suffixIcon: Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
+                                          child: IconButton(
+                                            icon: Icon(
+                                              isPasswordVisible
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                isPasswordVisible =
+                                                    !isPasswordVisible;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(
+                                          context); // Close the dialog
+                                    },
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      if (newPassword == confirmNewPassword) {
+                                        setState(() {
+                                          _isLoading = 5;
+                                        });
+                                        String response = await FirebaseWrapper
+                                            .updatePassword(newPassword);
+                                        setState(() {
+                                          _isLoading = -1;
+                                        });
+                                        if (response == 'success') {
+                                          ElegantNotification.success(
+                                              width: 100,
+                                              title: const Text(
+                                                "Success",
+                                                style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              description: const Text(
+                                                "Password changed successfully.",
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              )).show(context);
+                                          Navigator.pop(context);
+                                        } else {
+                                          ElegantNotification.error(
+                                              width: 100,
+                                              title: const Text(
+                                                "Error",
+                                                style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              description: Text(
+                                                response,
+                                                style: const TextStyle(
+                                                    color: Colors.black),
+                                              )).show(context);
+                                        }
+                                      } else {
+                                        ElegantNotification.error(
+                                            width: 100,
+                                            title: const Text(
+                                              "Error",
+                                              style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            description: const Text(
+                                              "Passwords do not match. Please try again.",
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            )).show(context);
+                                      }
+                                    },
+                                    child: _isLoading == 5
+                                        ? const CircularProgressIndicator()
+                                        : const Text('Change'),
+                                  ),
+                                ],
+                              );
+                            });
+                          },
+                        );
+                      } else {
+                        ElegantNotification.error(
+                            width: 100,
+                            title: const Text(
+                              "Wrong password",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            description: const Text(
+                              "Wrong password entered. Please try again.",
+                              style: TextStyle(color: Colors.black),
+                            )).show(context);
+                      }
+                    },
+                    child: const Text('Change'),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> toggleEditUsername() async {
@@ -89,25 +310,28 @@ class _ProfilePageState extends State<ProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 1,
+          flex: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: FirebaseWrapper.profilePicture.image,
-                  child: IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () async {
-                      Image? placeholderImage =
-                          await FirebaseWrapper.uploadPic();
-                      if (placeholderImage != null) {
-                        setState(() {
-                          FirebaseWrapper.profilePicture = placeholderImage;
-                        });
-                      }
-                    },
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: FirebaseWrapper.profilePicture.image,
+                    child: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () async {
+                        Image? placeholderImage =
+                            await FirebaseWrapper.uploadPic();
+                        if (placeholderImage != null) {
+                          setState(() {
+                            FirebaseWrapper.profilePicture = placeholderImage;
+                          });
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -178,7 +402,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Flexible(
                           child: IconButton(
                             icon: _isLoading == 3
-                                ? CircularProgressIndicator()
+                                ? const CircularProgressIndicator()
                                 : isEditingAbout
                                     ? const Icon(Icons.check)
                                     : const Icon(Icons.edit),
@@ -222,13 +446,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     toggleEditUsername,
                     0),
                 const SizedBox(height: 16),
-                _buildTextFieldWithLabel(
-                    'Password',
-                    Icons.lock,
-                    _passwordController,
-                    _isPasswordEditable,
-                    toggleEditPassword,
-                    1),
+                _buildTextFieldWithLabel('Password', Icons.lock,
+                    _passwordController, false, toggleEditPassword, 1),
                 const SizedBox(height: 16),
                 _buildTextFieldWithLabel(
                     'Email', Icons.email, _emailController, false, null, 2),
@@ -272,6 +491,11 @@ class _ProfilePageState extends State<ProfilePage> {
           if (label != 'Email')
             if (_isLoading == ord)
               const CircularProgressIndicator()
+            else if (label == 'Password')
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: onToggleEdit,
+              )
             else if (!isEditable)
               IconButton(
                 icon: const Icon(Icons.edit),

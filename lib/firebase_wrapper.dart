@@ -24,6 +24,54 @@ class FirebaseWrapper {
     await syncAboutText();
   }
 
+  static Future<String> updatePassword(String newPassword) async {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final User? user = auth.currentUser;
+
+    if (user != null) {
+      try {
+        await user.updatePassword(newPassword);
+        return "success";
+      } catch (e) {
+        if (e is FirebaseAuthException) {
+          String? errorCode = e.code;
+          String? errorMessage = e.message;
+          print(errorMessage);
+          if (errorCode == 'weak-password' ||
+              errorMessage!.contains('weak-password')) {
+            return "Password is too weak. Try a more secure one.";
+          } else if (errorCode == 'requires-recent-login' ||
+              errorMessage.contains('requires-recent-login')) {
+            return "Authentication expired. Try relogging.";
+          }
+        }
+      }
+    }
+    return "No user detected!";
+  }
+
+  static Future<bool> checkPassword(
+      TextEditingController passwordController) async {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final User? user = auth.currentUser;
+    if (user != null) {
+      final credential = EmailAuthProvider.credential(
+          email: user.email!, password: passwordController.text);
+      try {
+        await user.reauthenticateWithCredential(credential);
+        // User successfully reauthenticated, proceed with password change logic here
+        // Use the Firebase Auth APIs to change the password
+        // For example: await user.updatePassword(newPassword);
+        // Display a success message or navigate to a new screen
+        return true;
+      } catch (e) {
+        // An error occurred during reauthentication
+        // Display an error message or handle the error appropriately
+      }
+    }
+    return false;
+  }
+
   static Future<void> syncAboutText() async {
     aboutText = "";
     if (auth.currentUser != null) {
