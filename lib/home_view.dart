@@ -6,6 +6,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:memora_life/connections_view.dart';
 import 'package:memora_life/main.dart';
 import 'package:memora_life/profile_view.dart';
+import 'package:memora_life/reservations_view.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class HomePage extends StatefulWidget {
@@ -77,6 +78,10 @@ class _HomePageState extends State<HomePage> {
           NavigationDestination(
             icon: Icon(Icons.people),
             label: 'Connections',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.house),
+            label: 'Reservations',
           ),
           NavigationDestination(
             icon: Icon(Icons.person),
@@ -692,6 +697,7 @@ class _HomePageState extends State<HomePage> {
               )),
         ]),
         const ConnectionsPage(),
+        ReservationsPage(),
         ProfilePage(),
       ][MyApp.currentPageIndex],
     );

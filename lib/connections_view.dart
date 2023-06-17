@@ -77,24 +77,47 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                       String? about = user['about'];
                       String? profilePicUrl = user['profilePic'];
 
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.white,
-                          backgroundImage: profilePicUrl != null
-                              ? NetworkImage(profilePicUrl)
-                              : const NetworkImage('assets/user.png'),
-                        ),
-                        title: Text(
-                          username,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey,
+                              width: 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(8.0),
                           ),
-                        ),
-                        subtitle: Text(
-                          about ?? '',
-                          style: const TextStyle(
-                            color: Colors.grey,
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              backgroundImage: profilePicUrl != null
+                                  ? NetworkImage(profilePicUrl)
+                                  : const AssetImage('assets/user.png')
+                                      as ImageProvider<Object>?,
+                            ),
+                            title: Text(
+                              username,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              about ?? '',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.send,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () {
+                                print("Send to user number: $index");
+                              },
+                            ),
                           ),
                         ),
                       );
@@ -108,7 +131,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
         Expanded(
           child: Container(
             color: Colors.blue,
-            child: Column(
+            child: const Column(
               children: [],
             ),
           ),
