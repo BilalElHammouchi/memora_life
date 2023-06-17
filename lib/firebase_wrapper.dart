@@ -12,6 +12,7 @@ import 'firebase_options.dart';
 class FirebaseWrapper {
   static final FirebaseAuth auth = FirebaseAuth.instance;
   static late String username;
+  static late String aboutText;
   static Image profilePicture = Image.asset('user.png');
   static Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,31 @@ class FirebaseWrapper {
     );
     await syncUsername();
     await syncProfilePic();
+    await syncAboutText();
+  }
+
+  static Future<void> syncAboutText() async {
+    aboutText = "";
+    if (auth.currentUser != null) {
+      final CollectionReference usersCollection =
+          FirebaseFirestore.instance.collection('users');
+      final DocumentReference userDocument =
+          usersCollection.doc(auth.currentUser!.uid);
+      final DocumentSnapshot snapshot = await userDocument.get();
+      if (snapshot.exists) {
+        final userData = snapshot.data() as Map<String, dynamic>;
+        aboutText = userData['about'] ?? "";
+      } else {
+        print('User document does not exist');
+      }
+    }
+  }
+
+  static Future<void> saveAboutText(String aboutText) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.currentUser!.uid)
+        .update({'about': aboutText});
   }
 
   static Future<void> syncProfilePic() async {
