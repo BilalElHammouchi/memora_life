@@ -322,6 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.only(top: 20.0),
                     child: CircleAvatar(
                       radius: 50,
+                      backgroundColor: Colors.blue,
                       backgroundImage: FirebaseWrapper.profilePicture.image,
                       child: IconButton(
                         icon: const Icon(Icons.edit),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:memora_life/firebase_wrapper.dart';
 
 class ConnectionsPage extends StatefulWidget {
   const ConnectionsPage({Key? key}) : super(key: key);
@@ -8,27 +9,9 @@ class ConnectionsPage extends StatefulWidget {
 }
 
 class _ConnectionsPageState extends State<ConnectionsPage> {
-  List<String> connections = [];
-  List<String> buildings = [];
-  List<String> rooms = [];
-
-  void addConnection(String user) {
-    setState(() {
-      connections.add(user);
-    });
-  }
-
-  void addBuilding(String building) {
-    setState(() {
-      buildings.add(building);
-    });
-  }
-
-  void addRoom(String room) {
-    setState(() {
-      rooms.add(room);
-    });
-  }
+  List<Map<String, dynamic>> userList = [];
+  TextEditingController connectionsController = TextEditingController();
+  int _isLoading = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -39,71 +22,94 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
             color: Colors.white,
             child: Column(
               children: [
-                Icon(
-                  Icons.people,
-                  size: 100,
+                const Flexible(
+                  child: SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: Stack(children: [
+                      Icon(
+                        Icons.people,
+                        size: 100,
+                      ),
+                      Align(
+                          alignment: Alignment.bottomRight,
+                          child: Icon(Icons.add))
+                    ]),
+                  ),
                 ),
-                const Text('Connections'),
-                ElevatedButton(
-                  onPressed: () {
-                    addConnection('New Connection');
-                  },
-                  child: const Text('Add Connection'),
+                Flexible(
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    child: TextField(
+                      controller: connectionsController,
+                      decoration: InputDecoration(
+                        suffixIcon: _isLoading == 0
+                            ? const CircularProgressIndicator()
+                            : IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: () async {
+                                  setState(() {
+                                    _isLoading = 0;
+                                  });
+                                  userList =
+                                      await FirebaseWrapper.searchUsernames(
+                                          connectionsController.text);
+                                  setState(() {
+                                    userList = userList;
+                                    _isLoading = -1;
+                                  });
+                                },
+                              ),
+                        hintText: 'Search connections',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: connections.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(connections[index]),
-                    );
-                  },
-                ),
+                Flexible(
+                  child: ListView.builder(
+                    itemCount: userList.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> user = userList[index];
+                      String username = user['username'];
+                      String? about = user['about'];
+                      String? profilePicUrl = user['profilePic'];
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.white,
+                          backgroundImage: profilePicUrl != null
+                              ? NetworkImage(profilePicUrl)
+                              : const NetworkImage('assets/user.png'),
+                        ),
+                        title: Text(
+                          username,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          about ?? '',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                )
               ],
             ),
           ),
         ),
         Expanded(
           child: Container(
-            color: Colors.green,
+            color: Colors.blue,
             child: Column(
-              children: [
-                Icon(
-                  Icons.house,
-                  size: 100,
-                ),
-                const Text('Buildings and Rooms'),
-                ElevatedButton(
-                  onPressed: () {
-                    addBuilding('New Building');
-                  },
-                  child: const Text('Add Building'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    addRoom('New Room');
-                  },
-                  child: const Text('Add Room'),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: buildings.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(buildings[index]),
-                    );
-                  },
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: rooms.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(rooms[index]),
-                    );
-                  },
-                ),
-              ],
+              children: [],
             ),
           ),
         ),
