@@ -150,34 +150,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildReadOnlyTextFieldWithLabel(
-      String label, IconData icon, String text) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(icon),
-          ),
-          Expanded(
-            child: TextFormField(
-              initialValue: text,
-              readOnly: true,
-              decoration: InputDecoration(
-                hintText: label,
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTextFieldWithLabel(
     String label,
     IconData icon,
@@ -207,18 +179,19 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ),
-          if (_isLoading == ord)
-            const CircularProgressIndicator()
-          else if (!isEditable)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: onToggleEdit,
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: onToggleEdit,
-            )
+          if (label != 'Email')
+            if (_isLoading == ord)
+              const CircularProgressIndicator()
+            else if (!isEditable)
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: onToggleEdit,
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.check),
+                onPressed: onToggleEdit,
+              )
         ],
       ),
     );
