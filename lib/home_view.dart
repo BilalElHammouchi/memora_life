@@ -3,6 +3,7 @@ import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:memora_life/connections_view.dart';
 import 'package:memora_life/main.dart';
 import 'package:memora_life/profile_view.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -690,11 +691,7 @@ class _HomePageState extends State<HomePage> {
                 }),
               )),
         ]),
-        Container(
-          color: Colors.green,
-          alignment: Alignment.center,
-          child: const Text('Page 2'),
-        ),
+        const ConnectionsPage(),
         ProfilePage(),
       ][MyApp.currentPageIndex],
     );
