@@ -9,11 +9,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-  String _password = '********';
-  String _email = 'johndoe@example.com';
+  final String _password = '********';
   bool _isUsernameEditable = false;
   bool _isPasswordEditable = false;
   int _isLoading = -1;
@@ -23,12 +23,14 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _usernameController.text = FirebaseWrapper.username;
     _passwordController.text = _password;
+    _emailController.text = FirebaseWrapper.auth.currentUser!.email!;
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -139,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     1),
                 const SizedBox(height: 16),
                 _buildTextFieldWithLabel(
-                    'Email', Icons.email, null, false, null, 2),
+                    'Email', Icons.email, _emailController, false, null, 2),
               ],
             ),
           ),
