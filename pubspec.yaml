@@ -43,6 +43,10 @@ dependencies:
   calendar_date_picker2: ^0.5.2
   day_night_time_picker: ^1.2.0+2
   flutter_colorpicker: ^1.0.3
+  firebase_storage: ^11.2.3
+  image_picker: ^0.8.9
+  image_picker_for_web: ^2.2.0
+  firebase_storage_web: ^3.6.3
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +79,7 @@ flutter:
       - assets/google.png
       - assets/moon.png
       - assets/sun.png
+      - assets/user.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

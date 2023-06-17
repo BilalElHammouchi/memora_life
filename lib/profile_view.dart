@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:memora_life/firebase_wrapper.dart';
@@ -88,10 +87,16 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               CircleAvatar(
                 radius: 50,
+                backgroundImage: FirebaseWrapper.profilePicture.image,
                 child: IconButton(
                   icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    // Handle editing the icon
+                  onPressed: () async {
+                    Image? placeholderImage = await FirebaseWrapper.uploadPic();
+                    if (placeholderImage != null) {
+                      setState(() {
+                        FirebaseWrapper.profilePicture = placeholderImage;
+                      });
+                    }
                   },
                 ),
               ),
