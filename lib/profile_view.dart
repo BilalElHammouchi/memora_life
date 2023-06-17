@@ -312,124 +312,127 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         Expanded(
           flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundImage: FirebaseWrapper.profilePicture.image,
-                    child: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () async {
-                        Image? placeholderImage =
-                            await FirebaseWrapper.uploadPic();
-                        if (placeholderImage != null) {
-                          setState(() {
-                            FirebaseWrapper.profilePicture = placeholderImage;
-                          });
-                        }
-                      },
+          child: Container(
+            color: Colors.blue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: FirebaseWrapper.profilePicture.image,
+                      child: IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () async {
+                          Image? placeholderImage =
+                              await FirebaseWrapper.uploadPic();
+                          if (placeholderImage != null) {
+                            setState(() {
+                              FirebaseWrapper.profilePicture = placeholderImage;
+                            });
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: const Text(
-                    'About',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10.0, right: 10),
+                const SizedBox(height: 16),
+                Flexible(
                   child: Container(
-                    decoration: isEditingAbout
-                        ? BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 1.0,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          )
-                        : null,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: IntrinsicWidth(
-                            child: TextFormField(
-                              focusNode: _textFieldFocusNode,
-                              maxLines: null,
-                              maxLength: 250,
-                              minLines: 1,
-                              onTap: () {
-                                setState(() {
-                                  if (isEditingAbout == false) {
-                                    isEditingAbout = true;
-                                  }
-                                });
-                                FocusScope.of(context)
-                                    .requestFocus(_textFieldFocusNode);
-                              },
-                              readOnly: !isEditingAbout,
-                              controller: aboutTextController,
-                              onChanged: (value) {
-                                setState(() {
-                                  FirebaseWrapper.aboutText = value;
-                                });
-                              },
-                              decoration: const InputDecoration(
-                                hintText: 'Add something about yourself',
-                                border: InputBorder.none,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: const Text(
+                      'About',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10.0, right: 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                          color: isEditingAbout ? Colors.green : Colors.black,
+                          width: 2.0,
+                        ),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: IntrinsicWidth(
+                              child: TextFormField(
+                                focusNode: _textFieldFocusNode,
+                                maxLines: null,
+                                maxLength: 250,
+                                minLines: 1,
+                                onTap: () {
+                                  setState(() {
+                                    if (_isLoading != 3 &&
+                                        isEditingAbout == false) {
+                                      isEditingAbout = true;
+                                    }
+                                  });
+                                  FocusScope.of(context)
+                                      .requestFocus(_textFieldFocusNode);
+                                },
+                                readOnly: !isEditingAbout,
+                                controller: aboutTextController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    FirebaseWrapper.aboutText = value;
+                                  });
+                                },
+                                decoration: const InputDecoration(
+                                  hintText: 'Add something about yourself',
+                                  border: InputBorder.none,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Flexible(
-                          child: IconButton(
-                            icon: _isLoading == 3
-                                ? const CircularProgressIndicator()
-                                : isEditingAbout
-                                    ? const Icon(Icons.check)
-                                    : const Icon(Icons.edit),
-                            onPressed: () async {
-                              setState(() {
-                                isEditingAbout = !isEditingAbout;
-                              });
-                              if (isEditingAbout == false) {
+                          Flexible(
+                            child: IconButton(
+                              icon: _isLoading == 3
+                                  ? const CircularProgressIndicator()
+                                  : isEditingAbout
+                                      ? const Icon(Icons.check)
+                                      : const Icon(Icons.edit),
+                              onPressed: () async {
                                 setState(() {
-                                  _isLoading = 3;
+                                  isEditingAbout = !isEditingAbout;
                                 });
-                                await FirebaseWrapper.saveAboutText(
-                                    aboutTextController.text);
-                                setState(() {
-                                  _isLoading = -1;
-                                });
-                              }
-                            },
+                                if (isEditingAbout == false) {
+                                  setState(() {
+                                    _isLoading = 3;
+                                  });
+                                  await FirebaseWrapper.saveAboutText(
+                                      aboutTextController.text);
+                                  setState(() {
+                                    _isLoading = -1;
+                                  });
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         Expanded(
