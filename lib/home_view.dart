@@ -3,8 +3,6 @@ import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:memora_life/firebase_wrapper.dart';
-import 'package:memora_life/login_view.dart';
 import 'package:memora_life/main.dart';
 import 'package:memora_life/profile_view.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -683,29 +681,6 @@ class _HomePageState extends State<HomePage> {
                                   icon: containerHeight == 0
                                       ? const Icon(Icons.add)
                                       : const Icon(Icons.check)),
-                            ),
-                            // Logout Button
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  FirebaseWrapper.signOut();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginScreen()),
-                                  );
-                                },
-                                icon: const Icon(Icons.logout),
-                                label: const Text('Logout'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors
-                                      .red, // Set the button background color
-                                  foregroundColor:
-                                      Colors.white, // Set the text color
-                                ),
-                              ),
                             ),
                           ],
                         ),

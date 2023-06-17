@@ -2,6 +2,7 @@
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:memora_life/firebase_wrapper.dart';
+import 'package:memora_life/login_view.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -438,6 +439,31 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Logout Button
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 15.0, bottom: 30),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        FirebaseWrapper.signOut();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Logout'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Colors.red, // Set the button background color
+                        foregroundColor: Colors.white, // Set the text color
+                      ),
+                    ),
+                  ),
+                ),
+
                 _buildTextFieldWithLabel(
                     'Username',
                     Icons.person,
