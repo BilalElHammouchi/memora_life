@@ -12,11 +12,15 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  TextEditingController aboutTextController = TextEditingController();
+  String aboutTextPlaceholder = 'Add something interesting about you';
 
   final String _password = '********';
   bool _isUsernameEditable = false;
   bool _isPasswordEditable = false;
   int _isLoading = -1;
+  bool isEditingAbout = false;
+  FocusNode _textFieldFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -24,6 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _usernameController.text = FirebaseWrapper.username;
     _passwordController.text = _password;
     _emailController.text = FirebaseWrapper.auth.currentUser!.email!;
+    aboutTextController.text = FirebaseWrapper.aboutText;
   }
 
   @override
@@ -31,6 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _usernameController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
+    _textFieldFocusNode.dispose();
     super.dispose();
   }
 
@@ -87,32 +93,116 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: FirebaseWrapper.profilePicture.image,
-                child: IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () async {
-                    Image? placeholderImage = await FirebaseWrapper.uploadPic();
-                    if (placeholderImage != null) {
-                      setState(() {
-                        FirebaseWrapper.profilePicture = placeholderImage;
-                      });
-                    }
-                  },
+              Flexible(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: FirebaseWrapper.profilePicture.image,
+                  child: IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () async {
+                      Image? placeholderImage =
+                          await FirebaseWrapper.uploadPic();
+                      if (placeholderImage != null) {
+                        setState(() {
+                          FirebaseWrapper.profilePicture = placeholderImage;
+                        });
+                      }
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'About',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: const Text(
+                    'About',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-              const Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                textAlign: TextAlign.center,
+              const SizedBox(height: 8),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10.0, right: 10),
+                  child: Container(
+                    decoration: isEditingAbout
+                        ? BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey,
+                              width: 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          )
+                        : null,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: IntrinsicWidth(
+                            child: TextFormField(
+                              focusNode: _textFieldFocusNode,
+                              maxLines: null,
+                              maxLength: 250,
+                              minLines: 1,
+                              onTap: () {
+                                setState(() {
+                                  if (isEditingAbout == false) {
+                                    isEditingAbout = true;
+                                  }
+                                });
+                                FocusScope.of(context)
+                                    .requestFocus(_textFieldFocusNode);
+                              },
+                              readOnly: !isEditingAbout,
+                              controller: aboutTextController,
+                              onChanged: (value) {
+                                setState(() {
+                                  FirebaseWrapper.aboutText = value;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                hintText: 'Add something about yourself',
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Flexible(
+                          child: IconButton(
+                            icon: _isLoading == 3
+                                ? CircularProgressIndicator()
+                                : isEditingAbout
+                                    ? const Icon(Icons.check)
+                                    : const Icon(Icons.edit),
+                            onPressed: () async {
+                              setState(() {
+                                isEditingAbout = !isEditingAbout;
+                              });
+                              if (isEditingAbout == false) {
+                                setState(() {
+                                  _isLoading = 3;
+                                });
+                                await FirebaseWrapper.saveAboutText(
+                                    aboutTextController.text);
+                                setState(() {
+                                  _isLoading = -1;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
