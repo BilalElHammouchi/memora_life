@@ -181,6 +181,9 @@ class FirebaseWrapper {
             .collection('users')
             .doc(userCredential.user!.uid)
             .set({'username': username});
+        await syncUsername();
+        await syncProfilePic();
+        await syncAboutText();
         return 'signed-up';
       } else {
         return 'username-already-in-use';
@@ -224,6 +227,9 @@ class FirebaseWrapper {
       // Set remember me to true
       await auth.setPersistence(Persistence.LOCAL);
       // User is signed in
+      await syncUsername();
+      await syncProfilePic();
+      await syncAboutText();
       return 'signed-in';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.message!.contains('user-not-found')) {
