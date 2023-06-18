@@ -1,4 +1,4 @@
-// ignore_for_file: depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages, unnecessary_null_comparison
 import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -37,6 +37,18 @@ class FirebaseWrapper {
     } catch (e) {
       print(e);
       return false;
+    }
+  }
+
+  static Future<void> removeConnection(String senderID) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('connections')
+        .where('senderId', isEqualTo: senderID)
+        .get();
+
+    List<QueryDocumentSnapshot> documents = querySnapshot.docs;
+    for (QueryDocumentSnapshot document in documents) {
+      await document.reference.delete();
     }
   }
 
@@ -153,9 +165,7 @@ class FirebaseWrapper {
           .get();
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        if (data != null) {
-          return data['username'] as String?;
-        }
+        return data['username'] as String?;
       }
       return null; // User not found or username field is missing
     } catch (error) {
@@ -172,9 +182,7 @@ class FirebaseWrapper {
           .get();
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        if (data != null) {
-          return data['about'] as String?;
-        }
+        return data['about'] as String?;
       }
       return null; // User not found or username field is missing
     } catch (error) {
