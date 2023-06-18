@@ -86,6 +86,26 @@ class FirebaseWrapper {
     }
   }
 
+  static Future<List<Map<String, dynamic>>> getRequests(String userId) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    List<Map<String, dynamic>> requests;
+    try {
+      final QuerySnapshot snapshot = await firestore
+          .collection('connections')
+          .where('recipientId', isEqualTo: userId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+      if (snapshot.docs.isEmpty) return [];
+      requests = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+      return requests;
+    } catch (e) {
+      print('Error checking connection request: $e');
+      return [];
+    }
+  }
+
   static Future<String?> getUserIDFromUsername(String username) async {
     try {
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -121,6 +141,44 @@ class FirebaseWrapper {
     } catch (e) {
       // Handle any errors that occur during the retrieval
       print('Error retrieving profile picture: $e');
+      return null;
+    }
+  }
+
+  static Future<String?> getUsername(String userId) async {
+    try {
+      final DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        if (data != null) {
+          return data['username'] as String?;
+        }
+      }
+      return null; // User not found or username field is missing
+    } catch (error) {
+      print('Error retrieving username: $error');
+      return null;
+    }
+  }
+
+  static Future<String?> getAbout(String userId) async {
+    try {
+      final DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        if (data != null) {
+          return data['about'] as String?;
+        }
+      }
+      return null; // User not found or username field is missing
+    } catch (error) {
+      print('Error retrieving about: $error');
       return null;
     }
   }

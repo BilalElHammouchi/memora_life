@@ -16,6 +16,14 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
   TextEditingController connectionsController = TextEditingController();
   int _isLoading = -1;
   late List<bool> invites;
+  late Future<List<Map<String, dynamic>>> _futureRequests;
+
+  @override
+  void initState() {
+    _futureRequests =
+        FirebaseWrapper.getRequests(FirebaseWrapper.auth.currentUser!.uid);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +276,143 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                       color: const Color.fromARGB(
                                           255, 33, 128, 243),
                                     ),
+                                    child: FutureBuilder<
+                                        List<Map<String, dynamic>>>(
+                                      future: _futureRequests,
+                                      builder: (context,
+                                          AsyncSnapshot<
+                                                  List<Map<String, dynamic>>>
+                                              snapshot) {
+                                        switch (snapshot.connectionState) {
+                                          case ConnectionState.none:
+                                          case ConnectionState.waiting:
+                                            return const CircularProgressIndicator();
+                                          case ConnectionState.active:
+                                          case ConnectionState.done:
+                                            if (snapshot.hasError) {
+                                              return Text(
+                                                  'Error: ${snapshot.error}');
+                                            } else {
+                                              final List<Map<String, dynamic>>
+                                                  data = snapshot.data ?? [];
+                                              print(data);
+                                              return ListView.builder(
+                                                itemCount: data.length,
+                                                itemBuilder: (context, index) {
+                                                  return FutureBuilder(
+                                                    future: buildListTileData(
+                                                        data[index]),
+                                                    builder: (context,
+                                                        AsyncSnapshot<
+                                                                Map<String,
+                                                                    dynamic>>
+                                                            snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return const CircularProgressIndicator();
+                                                      } else if (snapshot
+                                                          .hasError) {
+                                                        return Text(
+                                                            'Error: ${snapshot.error}');
+                                                      } else {
+                                                        final item =
+                                                            snapshot.data!;
+                                                        return Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            border: Border.all(
+                                                              color:
+                                                                  Colors.white,
+                                                              width: 1.0,
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8.0),
+                                                          ),
+                                                          margin:
+                                                              const EdgeInsets
+                                                                      .symmetric(
+                                                                  vertical: 4.0,
+                                                                  horizontal:
+                                                                      4.0),
+                                                          child: ListTile(
+                                                            leading:
+                                                                CircleAvatar(
+                                                              backgroundColor:
+                                                                  Colors.white,
+                                                              backgroundImage: item[
+                                                                          'profilePicUrl'] !=
+                                                                      null
+                                                                  ? NetworkImage(
+                                                                      item[
+                                                                          'profilePicUrl'])
+                                                                  : const AssetImage(
+                                                                          'assets/user.png')
+                                                                      as ImageProvider<
+                                                                          Object>?,
+                                                            ),
+                                                            title: Text(
+                                                              item['username'],
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 18,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                            subtitle: Text(
+                                                              item['about'].substring(
+                                                                          0,
+                                                                          30) +
+                                                                      '...' ??
+                                                                  '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                            trailing: SizedBox(
+                                                              width: 60,
+                                                              child: Row(
+                                                                children: [
+                                                                  Flexible(
+                                                                    child: IconButton(
+                                                                        onPressed: () {},
+                                                                        icon: const Icon(
+                                                                          Icons
+                                                                              .check,
+                                                                          color:
+                                                                              Colors.green,
+                                                                        )),
+                                                                  ),
+                                                                  Flexible(
+                                                                      child: IconButton(
+                                                                          onPressed:
+                                                                              () {},
+                                                                          icon: const Icon(
+                                                                              Icons.cancel,
+                                                                              color: Colors.red))),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            }
+                                        }
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -278,11 +423,34 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                     ),
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                      )),
+                ),
               ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Future<Map<String, dynamic>> buildListTileData(
+      Map<String, dynamic> item) async {
+    String? profilePicUrl =
+        await FirebaseWrapper.getProfilePictureUrl(item['senderId']);
+    String? username = await FirebaseWrapper.getUsername(item['senderId']);
+    String? about = await FirebaseWrapper.getAbout(item['senderId']);
+
+    return {
+      'profilePicUrl': profilePicUrl,
+      'username': username,
+      'about': about,
+    };
   }
 }
