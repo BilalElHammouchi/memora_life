@@ -129,61 +129,70 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                         Icons.pending,
                                         color: Colors.blue,
                                       )
-                                    : IconButton(
-                                        icon: _isLoading == index + 1
-                                            ? const CircularProgressIndicator()
-                                            : const Icon(
-                                                Icons.send,
-                                                color: Colors.blue,
-                                              ),
-                                        onPressed: () async {
-                                          if (_isLoading == -1) {
-                                            setState(() {
-                                              _isLoading = index + 1;
-                                            });
-                                            if (await FirebaseWrapper
-                                                .sendConnectionRequest(
-                                                    userList[index]
-                                                        ["username"])) {
-                                              ElegantNotification.success(
-                                                  width: 100,
-                                                  title: const Text(
-                                                    "Success",
-                                                    style: TextStyle(
-                                                        color: Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.bold),
+                                    : (status == 'accepted')
+                                        ? const Icon(
+                                            Icons.people,
+                                            color: Colors.blue,
+                                          )
+                                        : IconButton(
+                                            icon: _isLoading == index + 1
+                                                ? const CircularProgressIndicator()
+                                                : const Icon(
+                                                    Icons.send,
+                                                    color: Colors.blue,
                                                   ),
-                                                  description: const Text(
-                                                    "Connection request sent successfully.",
-                                                    style: TextStyle(
-                                                        color: Colors.black),
-                                                  )).show(context);
-                                              setState(() {
-                                                invites[index] = true;
-                                              });
-                                            } else {
-                                              ElegantNotification.error(
-                                                  width: 100,
-                                                  title: const Text(
-                                                    "Error",
-                                                    style: TextStyle(
-                                                        color: Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  description: const Text(
-                                                    "Connection request unable to be sent.",
-                                                    style: TextStyle(
-                                                        color: Colors.black),
-                                                  )).show(context);
-                                            }
-                                            setState(() {
-                                              _isLoading = -1;
-                                            });
-                                          }
-                                        },
-                                      ),
+                                            onPressed: () async {
+                                              if (_isLoading == -1) {
+                                                setState(() {
+                                                  _isLoading = index + 1;
+                                                });
+                                                if (await FirebaseWrapper
+                                                    .sendConnectionRequest(
+                                                        userList[index]
+                                                            ["username"])) {
+                                                  ElegantNotification.success(
+                                                      width: 100,
+                                                      title: const Text(
+                                                        "Success",
+                                                        style: TextStyle(
+                                                            color: Colors.black,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                      description: const Text(
+                                                        "Connection request sent successfully.",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.black),
+                                                      )).show(context);
+                                                  setState(() {
+                                                    invites[index] = true;
+                                                  });
+                                                } else {
+                                                  ElegantNotification.error(
+                                                      width: 100,
+                                                      title: const Text(
+                                                        "Error",
+                                                        style: TextStyle(
+                                                            color: Colors.black,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                      description: const Text(
+                                                        "Connection request unable to be sent.",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.black),
+                                                      )).show(context);
+                                                }
+                                                setState(() {
+                                                  _isLoading = -1;
+                                                });
+                                              }
+                                            },
+                                          ),
                           ),
                         ),
                       );
@@ -244,6 +253,144 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                       color: const Color.fromARGB(
                                           255, 33, 128, 243),
                                     ),
+                                    child: FutureBuilder<
+                                        List<Map<String, dynamic>>>(
+                                      future: FirebaseWrapper.getConnections(
+                                          FirebaseWrapper
+                                              .auth.currentUser!.uid),
+                                      builder: (context,
+                                          AsyncSnapshot<
+                                                  List<Map<String, dynamic>>>
+                                              snapshot) {
+                                        switch (snapshot.connectionState) {
+                                          case ConnectionState.none:
+                                          case ConnectionState.waiting:
+                                          case ConnectionState.active:
+                                          case ConnectionState.done:
+                                            if (snapshot.hasError) {
+                                              return Text(
+                                                  'Error: ${snapshot.error}');
+                                            } else {
+                                              final List<Map<String, dynamic>>
+                                                  establishedConnections =
+                                                  snapshot.data ?? [];
+                                              return ListView.builder(
+                                                itemCount:
+                                                    establishedConnections
+                                                        .length,
+                                                itemBuilder: (context, index) {
+                                                  return FutureBuilder(
+                                                    future: buildListTileData(
+                                                        establishedConnections[
+                                                            index]),
+                                                    builder: (context,
+                                                        AsyncSnapshot<
+                                                                Map<String,
+                                                                    dynamic>>
+                                                            snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  top: 8.0,
+                                                                  left: 50,
+                                                                  right: 50),
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation(
+                                                                    Colors
+                                                                        .white),
+                                                          ),
+                                                        );
+                                                      } else if (snapshot
+                                                          .hasError) {
+                                                        return Text(
+                                                            'Error: ${snapshot.error}');
+                                                      } else {
+                                                        final item =
+                                                            snapshot.data!;
+                                                        return Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            border: Border.all(
+                                                              color:
+                                                                  Colors.white,
+                                                              width: 1.0,
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8.0),
+                                                          ),
+                                                          margin:
+                                                              const EdgeInsets
+                                                                      .symmetric(
+                                                                  vertical: 4.0,
+                                                                  horizontal:
+                                                                      4.0),
+                                                          child: ListTile(
+                                                            leading:
+                                                                CircleAvatar(
+                                                              backgroundColor:
+                                                                  Colors.white,
+                                                              backgroundImage: item[
+                                                                          'profilePicUrl'] !=
+                                                                      null
+                                                                  ? NetworkImage(
+                                                                      item[
+                                                                          'profilePicUrl'])
+                                                                  : const AssetImage(
+                                                                          'assets/user.png')
+                                                                      as ImageProvider<
+                                                                          Object>?,
+                                                            ),
+                                                            title: Text(
+                                                              item['username'],
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 18,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                            subtitle: Text(
+                                                              item['about']
+                                                                          .length >
+                                                                      30
+                                                                  ? item['about']
+                                                                          .substring(
+                                                                              0,
+                                                                              30) +
+                                                                      '...'
+                                                                  : item['about']
+                                                                      .substring(
+                                                                          0,
+                                                                          item['about']
+                                                                              .length),
+                                                              style:
+                                                                  const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            }
+                                        }
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -282,7 +429,6 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                         switch (snapshot.connectionState) {
                                           case ConnectionState.none:
                                           case ConnectionState.waiting:
-                                            return const CircularProgressIndicator();
                                           case ConnectionState.active:
                                           case ConnectionState.done:
                                             if (snapshot.hasError) {
@@ -306,7 +452,20 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                                               .connectionState ==
                                                           ConnectionState
                                                               .waiting) {
-                                                        return const CircularProgressIndicator();
+                                                        return const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  top: 8.0,
+                                                                  left: 50,
+                                                                  right: 50),
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation(
+                                                                    Colors
+                                                                        .white),
+                                                          ),
+                                                        );
                                                       } else if (snapshot
                                                           .hasError) {
                                                         return Text(
@@ -390,7 +549,17 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                                                       children: [
                                                                         Flexible(
                                                                           child: IconButton(
-                                                                              onPressed: () {},
+                                                                              onPressed: () async {
+                                                                                setState(() {
+                                                                                  _isLoadingRequests = index;
+                                                                                });
+                                                                                await FirebaseWrapper.acceptConnectionRequest(data[index]["senderId"]);
+                                                                                setState(() {
+                                                                                  setState(() {
+                                                                                    _isLoadingRequests = -1;
+                                                                                  });
+                                                                                });
+                                                                              },
                                                                               icon: const Icon(
                                                                                 Icons.check,
                                                                                 color: Colors.green,

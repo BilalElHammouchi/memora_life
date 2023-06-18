@@ -23,6 +23,44 @@ class FirebaseWrapper {
     await syncAboutText();
   }
 
+  static Future<List<Map<String, dynamic>>> getConnections(
+      String userId) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    List<Map<String, dynamic>> requests;
+    try {
+      final QuerySnapshot snapshot = await firestore
+          .collection('connections')
+          .where('recipientId', isEqualTo: userId)
+          .where('status', isEqualTo: 'accepted')
+          .get();
+      if (snapshot.docs.isEmpty) return [];
+      requests = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+      return requests;
+    } catch (e) {
+      print('Error checking connection request: $e');
+      return [];
+    }
+  }
+
+  static Future<void> acceptConnectionRequest(String senderId) async {
+    await FirebaseFirestore.instance
+        .collection('connections')
+        .where('senderId', isEqualTo: senderId)
+        .get()
+        .then((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final connectionDocRef = snapshot.docs.first.reference;
+        connectionDocRef.update({
+          'status': 'accepted',
+        });
+      }
+    }).catchError((error) {
+      print('Error accepting connection request: $error');
+    });
+  }
+
   static Future<bool> sendConnectionRequest(String recipientUsername) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -83,6 +121,7 @@ class FirebaseWrapper {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     try {
+      if (await checkConnection(senderId, recipientId)) return "accepted";
       final QuerySnapshot snapshot = await firestore
           .collection('connections')
           .where('senderId', isEqualTo: senderId)
@@ -96,6 +135,25 @@ class FirebaseWrapper {
       print('Error checking connection request: $e');
       return "not-found";
     }
+  }
+
+  static Future<bool> checkConnection(
+      String senderId, String recipientId) async {
+    final QuerySnapshot senderSnapshot = await FirebaseFirestore.instance
+        .collection('connections')
+        .where('status', isEqualTo: 'accepted')
+        .where('senderId', isEqualTo: senderId)
+        .where('recipientId', isEqualTo: recipientId)
+        .get();
+
+    final QuerySnapshot recipientSnapshot = await FirebaseFirestore.instance
+        .collection('connections')
+        .where('status', isEqualTo: 'accepted')
+        .where('senderId', isEqualTo: recipientId)
+        .where('recipientId', isEqualTo: senderId)
+        .get();
+
+    return senderSnapshot.docs.isNotEmpty || recipientSnapshot.docs.isNotEmpty;
   }
 
   static Future<List<Map<String, dynamic>>> getRequests(String userId) async {
