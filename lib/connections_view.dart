@@ -15,13 +15,11 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
   List<Map<String, dynamic>> userList = [];
   TextEditingController connectionsController = TextEditingController();
   int _isLoading = -1;
+  int _isLoadingRequests = -1;
   late List<bool> invites;
-  late Future<List<Map<String, dynamic>>> _futureRequests;
 
   @override
   void initState() {
-    _futureRequests =
-        FirebaseWrapper.getRequests(FirebaseWrapper.auth.currentUser!.uid);
     super.initState();
   }
 
@@ -161,11 +159,9 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                                     style: TextStyle(
                                                         color: Colors.black),
                                                   )).show(context);
-                                              print(invites);
                                               setState(() {
                                                 invites[index] = true;
                                               });
-                                              print(invites);
                                             } else {
                                               ElegantNotification.error(
                                                   width: 100,
@@ -182,8 +178,6 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                                         color: Colors.black),
                                                   )).show(context);
                                             }
-                                            print(
-                                                "Send to user number: $index");
                                             setState(() {
                                               _isLoading = -1;
                                             });
@@ -278,7 +272,9 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                     ),
                                     child: FutureBuilder<
                                         List<Map<String, dynamic>>>(
-                                      future: _futureRequests,
+                                      future: FirebaseWrapper.getRequests(
+                                          FirebaseWrapper
+                                              .auth.currentUser!.uid),
                                       builder: (context,
                                           AsyncSnapshot<
                                                   List<Map<String, dynamic>>>
@@ -295,7 +291,6 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                             } else {
                                               final List<Map<String, dynamic>>
                                                   data = snapshot.data ?? [];
-                                              print(data);
                                               return ListView.builder(
                                                 itemCount: data.length,
                                                 itemBuilder: (context, index) {
@@ -367,11 +362,19 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                                               ),
                                                             ),
                                                             subtitle: Text(
-                                                              item['about'].substring(
+                                                              item['about']
+                                                                          .length >
+                                                                      30
+                                                                  ? item['about']
+                                                                          .substring(
+                                                                              0,
+                                                                              30) +
+                                                                      '...'
+                                                                  : item['about']
+                                                                      .substring(
                                                                           0,
-                                                                          30) +
-                                                                      '...' ??
-                                                                  '',
+                                                                          item['about']
+                                                                              .length),
                                                               style:
                                                                   const TextStyle(
                                                                 color: Colors
@@ -380,27 +383,35 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                                             ),
                                                             trailing: SizedBox(
                                                               width: 60,
-                                                              child: Row(
-                                                                children: [
-                                                                  Flexible(
-                                                                    child: IconButton(
-                                                                        onPressed: () {},
-                                                                        icon: const Icon(
-                                                                          Icons
-                                                                              .check,
-                                                                          color:
-                                                                              Colors.green,
-                                                                        )),
-                                                                  ),
-                                                                  Flexible(
-                                                                      child: IconButton(
-                                                                          onPressed:
-                                                                              () {},
-                                                                          icon: const Icon(
-                                                                              Icons.cancel,
-                                                                              color: Colors.red))),
-                                                                ],
-                                                              ),
+                                                              child: _isLoadingRequests ==
+                                                                      index
+                                                                  ? const CircularProgressIndicator()
+                                                                  : Row(
+                                                                      children: [
+                                                                        Flexible(
+                                                                          child: IconButton(
+                                                                              onPressed: () {},
+                                                                              icon: const Icon(
+                                                                                Icons.check,
+                                                                                color: Colors.green,
+                                                                              )),
+                                                                        ),
+                                                                        Flexible(
+                                                                            child: IconButton(
+                                                                                onPressed: () async {
+                                                                                  setState(() {
+                                                                                    _isLoadingRequests = index;
+                                                                                  });
+                                                                                  await FirebaseWrapper.removeConnection(data[index]["senderId"]);
+                                                                                  setState(() {
+                                                                                    setState(() {
+                                                                                      _isLoadingRequests = -1;
+                                                                                    });
+                                                                                  });
+                                                                                },
+                                                                                icon: const Icon(Icons.cancel, color: Colors.red))),
+                                                                      ],
+                                                                    ),
                                                             ),
                                                           ),
                                                         );
@@ -426,7 +437,9 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        setState(() {});
+                      },
                       icon: const Icon(
                         Icons.refresh,
                         color: Colors.white,
