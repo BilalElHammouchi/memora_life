@@ -1,5 +1,4 @@
 // ignore_for_file: depend_on_referenced_packages
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -24,6 +23,23 @@ class FirebaseWrapper {
     await syncAboutText();
   }
 
+  static Future<bool> sendConnectionRequest(String recipientUsername) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    try {
+      await firestore.collection('connections').add({
+        'senderId': auth.currentUser!.uid,
+        'recipientId': await getUserIDFromUsername(recipientUsername),
+        'status': 'pending',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
   // Function to search for usernames
   static Future<List<Map<String, dynamic>>> searchUsernames(
       String searchTerm) async {
@@ -38,15 +54,39 @@ class FirebaseWrapper {
         .toList();
     List<Map<String, dynamic>> modifiedList = [];
 
+    late String? userId;
     for (var i = 0; i < usernamesInfo.length; i++) {
       Map<String, dynamic> map = usernamesInfo[i];
-      map['profilePic'] = await getProfilePictureUrlByUsername(map['username']);
+      userId = await getUserIDFromUsername(map['username']);
+      map['profilePic'] =
+          userId != null ? await getProfilePictureUrl(userId) : null;
       modifiedList.add(map);
+      map['status'] = await connectionStatus(auth.currentUser!.uid, userId!);
     }
     return usernamesInfo;
   }
 
-  static Future<String?> getProfilePictureUrlByUsername(String username) async {
+  static Future<String> connectionStatus(
+      String senderId, String recipientId) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    try {
+      final QuerySnapshot snapshot = await firestore
+          .collection('connections')
+          .where('senderId', isEqualTo: senderId)
+          .where('recipientId', isEqualTo: recipientId)
+          .get();
+      if (snapshot.docs.isEmpty) return "not-found";
+      Map<String, dynamic> data =
+          snapshot.docs[0].data() as Map<String, dynamic>;
+      return data['status'];
+    } catch (e) {
+      print('Error checking connection request: $e');
+      return "not-found";
+    }
+  }
+
+  static Future<String?> getUserIDFromUsername(String username) async {
     try {
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('users')
@@ -56,6 +96,19 @@ class FirebaseWrapper {
 
       if (querySnapshot.docs.isNotEmpty) {
         final String userId = querySnapshot.docs[0].id;
+        return userId;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error retrieving user id: $e');
+      return null;
+    }
+  }
+
+  static Future<String?> getProfilePictureUrl(String userId) async {
+    try {
+      if (userId != null) {
         final Reference ref = FirebaseStorage.instance.ref().child(
             'profile_images/$userId.jpg'); // Assuming the file format is JPEG
 
