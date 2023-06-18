@@ -1,3 +1,6 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:memora_life/firebase_wrapper.dart';
 
@@ -12,6 +15,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
   List<Map<String, dynamic>> userList = [];
   TextEditingController connectionsController = TextEditingController();
   int _isLoading = -1;
+  late List<bool> invites;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +58,8 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                   userList =
                                       await FirebaseWrapper.searchUsernames(
                                           connectionsController.text);
+                                  invites = List<bool>.generate(
+                                      userList.length, (_) => false);
                                   setState(() {
                                     userList = userList;
                                     _isLoading = -1;
@@ -76,7 +82,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                       String username = user['username'];
                       String? about = user['about'];
                       String? profilePicUrl = user['profilePic'];
-
+                      String? status = user['status'];
                       return Padding(
                         padding: const EdgeInsets.only(left: 16, right: 16),
                         child: Container(
@@ -109,15 +115,73 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                                 color: Colors.grey,
                               ),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.send,
-                                color: Colors.blue,
-                              ),
-                              onPressed: () {
-                                print("Send to user number: $index");
-                              },
-                            ),
+                            trailing: username == FirebaseWrapper.username
+                                ? const Icon(Icons.person, color: Colors.blue)
+                                : (status == 'pending' ||
+                                        invites[index] == true)
+                                    ? const Icon(
+                                        Icons.pending,
+                                        color: Colors.blue,
+                                      )
+                                    : IconButton(
+                                        icon: _isLoading == index + 1
+                                            ? const CircularProgressIndicator()
+                                            : const Icon(
+                                                Icons.send,
+                                                color: Colors.blue,
+                                              ),
+                                        onPressed: () async {
+                                          if (_isLoading == -1) {
+                                            setState(() {
+                                              _isLoading = index + 1;
+                                            });
+                                            if (await FirebaseWrapper
+                                                .sendConnectionRequest(
+                                                    userList[index]
+                                                        ["username"])) {
+                                              ElegantNotification.success(
+                                                  width: 100,
+                                                  title: const Text(
+                                                    "Success",
+                                                    style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  description: const Text(
+                                                    "Connection request sent successfully.",
+                                                    style: TextStyle(
+                                                        color: Colors.black),
+                                                  )).show(context);
+                                              print(invites);
+                                              setState(() {
+                                                invites[index] = true;
+                                              });
+                                              print(invites);
+                                            } else {
+                                              ElegantNotification.error(
+                                                  width: 100,
+                                                  title: const Text(
+                                                    "Error",
+                                                    style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  description: const Text(
+                                                    "Connection request unable to be sent.",
+                                                    style: TextStyle(
+                                                        color: Colors.black),
+                                                  )).show(context);
+                                            }
+                                            print(
+                                                "Send to user number: $index");
+                                            setState(() {
+                                              _isLoading = -1;
+                                            });
+                                          }
+                                        },
+                                      ),
                           ),
                         ),
                       );
