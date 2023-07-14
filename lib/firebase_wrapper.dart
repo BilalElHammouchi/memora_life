@@ -363,6 +363,66 @@ class FirebaseWrapper {
     });
   }
 
+  static Future<bool> isReservationNameUnique(String reservationName) async {
+    final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('reservations')
+        .where('reservationName', isEqualTo: reservationName)
+        .get();
+
+    return querySnapshot.docs.isEmpty;
+  }
+
+  static Future<List<Map<String, dynamic>>> getReservations() async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    List<Map<String, dynamic>> requests;
+    try {
+      final QuerySnapshot snapshot = await firestore
+          .collection('reservations')
+          .where('userId', isEqualTo: auth.currentUser!.uid)
+          .get();
+      if (snapshot.docs.isEmpty) return [];
+      requests = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+      for (int i = 0; i < requests.length; i++) {
+        final Reference ref = FirebaseStorage.instance.ref().child(
+            'reservation_images/${requests[i]["reservationName"]}.jpg'); // Assuming the file format is JPEG
+
+        final String downloadUrl = await ref.getDownloadURL();
+
+        requests[i]['imagePath'] = downloadUrl;
+      }
+      return requests;
+    } catch (e) {
+      print('Error checking connection request: $e');
+      return [];
+    }
+  }
+
+  static Future<bool> addReservation(String reservationName, XFile? image,
+      double latitude, double longitude, String address) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    if (image != null) {
+      final FirebaseStorage storage = FirebaseStorage.instance;
+      final Reference storageReference =
+          storage.ref().child('reservation_images/$reservationName.jpg');
+      storageReference.putData(await streamToUint8List(image.openRead()));
+    }
+    try {
+      await firestore.collection('reservations').add({
+        'userId': auth.currentUser!.uid,
+        'reservationName': reservationName,
+        'latitude': latitude,
+        'longitude': longitude,
+        'address': address
+      });
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
   static Future<Image?> uploadPic() async {
     late Image finalImage;
     final FirebaseStorage storage = FirebaseStorage.instance;
