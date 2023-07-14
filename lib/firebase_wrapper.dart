@@ -44,6 +44,24 @@ class FirebaseWrapper {
     }
   }
 
+  static Future<List<String>> getConnectionsNames(String userId) async {
+    List<Map<String, dynamic>> requests = await getConnections(userId);
+    List<String> connectionsNames = [];
+    for (Map<String, dynamic> connection in requests) {
+      connectionsNames.add(await getUsername(connection["senderId"]) ?? '');
+    }
+    return connectionsNames;
+  }
+
+  static Future<List<String>> getReservationsNames(String userId) async {
+    List<Map<String, dynamic>> requests = await getReservations();
+    List<String> reservationsNames = [];
+    for (Map<String, dynamic> reservation in requests) {
+      reservationsNames.add(reservation["reservationName"]);
+    }
+    return reservationsNames;
+  }
+
   static Future<void> acceptConnectionRequest(String senderId) async {
     await FirebaseFirestore.instance
         .collection('connections')

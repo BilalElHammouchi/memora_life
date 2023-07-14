@@ -49,6 +49,8 @@ dependencies:
   firebase_storage_web: ^3.6.3
   map_location_picker: ^0.0.1
   map_picker_free: ^0.0.1
+  dropdown_button2: ^2.3.4
+  switcher_button: ^0.0.4
 
 dev_dependencies:
   flutter_test:
