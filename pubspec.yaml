@@ -47,6 +47,8 @@ dependencies:
   image_picker: ^0.8.9
   image_picker_for_web: ^2.2.0
   firebase_storage_web: ^3.6.3
+  map_location_picker: ^0.0.1
+  map_picker_free: ^0.0.1
 
 dev_dependencies:
   flutter_test:
