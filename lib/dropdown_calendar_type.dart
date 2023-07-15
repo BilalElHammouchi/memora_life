@@ -44,7 +44,7 @@ class _MyDropDownCalendarButtonState extends State<MyDropDownCalendarButton> {
           ),
           Expanded(
             child: Text(
-              'Select Item',
+              'Select Calendar Type',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,

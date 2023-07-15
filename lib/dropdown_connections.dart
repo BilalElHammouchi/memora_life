@@ -35,7 +35,7 @@ class _MyDropDownConnectionsButtonState
       child: DropdownButton2<String>(
         isExpanded: true,
         hint: const Text(
-          'Select Items',
+          'Select Connections',
           style: TextStyle(
             fontSize: 14,
             color: Colors.white,
