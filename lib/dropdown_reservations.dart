@@ -40,7 +40,7 @@ class _myDropdownReservationsButtonState
       child: DropdownButton2<String>(
         isExpanded: true,
         hint: const Text(
-          'Select Item',
+          'Select Reservation',
           style: TextStyle(
             fontSize: 14,
             color: Colors.white,

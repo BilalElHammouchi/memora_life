@@ -44,11 +44,16 @@ class FirebaseWrapper {
     }
   }
 
-  static Future<List<String>> getConnectionsNames(String userId) async {
+  static Future<List<Map<String, String>>> getConnectionsNames(
+      String userId) async {
     List<Map<String, dynamic>> requests = await getConnections(userId);
-    List<String> connectionsNames = [];
+    List<Map<String, String>> connectionsNames = [];
     for (Map<String, dynamic> connection in requests) {
-      connectionsNames.add(await getUsername(connection["senderId"]) ?? '');
+      Map<String, String> addMe = {};
+      addMe['name'] = await getUsername(connection["senderId"]) ?? '';
+      addMe['id'] = connection["senderId"];
+      addMe['image'] = await getProfilePictureUrl(connection["senderId"]) ?? '';
+      connectionsNames.add(addMe);
     }
     return connectionsNames;
   }
@@ -60,6 +65,75 @@ class FirebaseWrapper {
       reservationsNames.add(reservation["reservationName"]);
     }
     return reservationsNames;
+  }
+
+  static Future<String> getReservationPicture(String reservationName) async {
+    final Reference ref = FirebaseStorage.instance.ref().child(
+        'reservation_images/$reservationName.jpg'); // Assuming the file format is JPEG
+
+    final String downloadUrl = await ref.getDownloadURL();
+    return downloadUrl;
+  }
+
+  static Future<void> saveAppointment(
+      String subject,
+      String location,
+      String reservation,
+      double longitude,
+      double latitude,
+      List<String> participants,
+      DateTime eventStartDate,
+      DateTime eventEndDate) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    try {
+      await firestore.collection('appointments').add({
+        'subject': subject,
+        'location': location,
+        'reservation': reservation,
+        'longitude': longitude,
+        'latitude': latitude,
+        'participants': participants,
+        'eventStart': eventStartDate,
+        'eventEnd': eventEndDate
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getAppointments() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection("appointments")
+        .where("participants", arrayContains: FirebaseWrapper.username)
+        .get();
+
+    List<Map<String, dynamic>> appointmentList = querySnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
+    for (Map<String, dynamic> appointment in appointmentList) {
+      List<dynamic> participants = appointment["participants"];
+      List<dynamic> participantsId = [];
+      List<String?> participantsImages = [];
+      for (dynamic participant in participants) {
+        String id = await getIdFromUsername(participant);
+        participantsId.add(id);
+        participantsImages.add(await getProfilePictureUrl(id));
+      }
+      appointment["participantsId"] = participantsId;
+      appointment["participantsImages"] = participantsImages;
+    }
+    return appointmentList;
+  }
+
+  static Future<String> getIdFromUsername(String username) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: username)
+        .limit(1)
+        .get();
+
+    String userid = querySnapshot.docs.first.id;
+    return userid;
   }
 
   static Future<void> acceptConnectionRequest(String senderId) async {
